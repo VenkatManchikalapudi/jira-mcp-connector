@@ -1,8 +1,10 @@
 import {
   Server,
-  Tool,
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/server/index.js";
+import {
   TextContent,
-  ToolUseBlock,
 } from "@modelcontextprotocol/sdk/types.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
@@ -181,6 +183,150 @@ class JiraClient {
   }
 }
 
+const tools = [
+  {
+    name: "get_issue",
+    description:
+      "Fetch a Jira issue by its key (e.g., SPR-1234). Returns issue details including title, description, status, assignee, and more.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        issue_key: {
+          type: "string",
+          description: "The Jira issue key (e.g., SPR-1234)",
+        },
+      },
+      required: ["issue_key"],
+    },
+  },
+  {
+    name: "search_issues",
+    description:
+      "Search Jira issues using JQL (Jira Query Language). Examples: 'project = SPR AND status = Open', 'assignee = currentUser() AND due <= now()'",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        jql: {
+          type: "string",
+          description:
+            "JQL query string (e.g., 'project = SPR AND assignee = currentUser()')",
+        },
+        max_results: {
+          type: "number",
+          description: "Maximum number of results to return (default: 20, max: 100)",
+          default: 20,
+        },
+      },
+      required: ["jql"],
+    },
+  },
+  {
+    name: "create_issue",
+    description:
+      "Create a new Jira issue in a project. Returns the newly created issue key.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        project: {
+          type: "string",
+          description: "Project key (e.g., SPR)",
+        },
+        issue_type: {
+          type: "string",
+          description: "Issue type (e.g., Bug, Task, Story, Subtask)",
+        },
+        summary: {
+          type: "string",
+          description: "Issue title/summary",
+        },
+        description: {
+          type: "string",
+          description: "Issue description (optional)",
+        },
+      },
+      required: ["project", "issue_type", "summary"],
+    },
+  },
+  {
+    name: "add_comment",
+    description:
+      "Add a comment to a Jira issue. Use this to provide updates, responses, or resolutions.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        issue_key: {
+          type: "string",
+          description: "The issue key to comment on (e.g., SPR-1234)",
+        },
+        comment: {
+          type: "string",
+          description: "The comment text",
+        },
+      },
+      required: ["issue_key", "comment"],
+    },
+  },
+  {
+    name: "get_transitions",
+    description:
+      "Get available workflow transitions for an issue. Returns a list of possible statuses you can move the issue to.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        issue_key: {
+          type: "string",
+          description: "The issue key (e.g., SPR-1234)",
+        },
+      },
+      required: ["issue_key"],
+    },
+  },
+  {
+    name: "transition_issue",
+    description:
+      "Move an issue to a new status. First call get_transitions to see available transitions.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        issue_key: {
+          type: "string",
+          description: "The issue key (e.g., SPR-1234)",
+        },
+        transition_id: {
+          type: "string",
+          description:
+            "The transition ID from get_transitions (e.g., '11' for 'In Progress')",
+        },
+        comment: {
+          type: "string",
+          description: "Optional comment to add when transitioning",
+        },
+      },
+      required: ["issue_key", "transition_id"],
+    },
+  },
+  {
+    name: "update_issue",
+    description:
+      "Update issue fields like priority, labels, or custom fields.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        issue_key: {
+          type: "string",
+          description: "The issue key (e.g., SPR-1234)",
+        },
+        fields: {
+          type: "object",
+          description:
+            "Fields to update (e.g., {\"priority\": {\"name\": \"High\"}, \"labels\": [\"urgent\"]})",
+        },
+      },
+      required: ["issue_key", "fields"],
+    },
+  },
+];
+
 async function main() {
   const jiraHost = process.env.JIRA_HOST;
   const jiraUsername = process.env.JIRA_USERNAME;
@@ -207,151 +353,13 @@ async function main() {
     version: "1.0.0",
   });
 
-  const tools: Tool[] = [
-    {
-      name: "get_issue",
-      description:
-        "Fetch a Jira issue by its key (e.g., SPR-1234). Returns issue details including title, description, status, assignee, and more.",
-      inputSchema: {
-        type: "object" as const,
-        properties: {
-          issue_key: {
-            type: "string",
-            description: "The Jira issue key (e.g., SPR-1234)",
-          },
-        },
-        required: ["issue_key"],
-      },
-    },
-    {
-      name: "search_issues",
-      description:
-        "Search Jira issues using JQL (Jira Query Language). Examples: 'project = SPR AND status = Open', 'assignee = currentUser() AND due <= now()'",
-      inputSchema: {
-        type: "object" as const,
-        properties: {
-          jql: {
-            type: "string",
-            description:
-              "JQL query string (e.g., 'project = SPR AND assignee = currentUser()')",
-          },
-          max_results: {
-            type: "number",
-            description: "Maximum number of results to return (default: 20, max: 100)",
-            default: 20,
-          },
-        },
-        required: ["jql"],
-      },
-    },
-    {
-      name: "create_issue",
-      description:
-        "Create a new Jira issue in a project. Returns the newly created issue key.",
-      inputSchema: {
-        type: "object" as const,
-        properties: {
-          project: {
-            type: "string",
-            description: "Project key (e.g., SPR)",
-          },
-          issue_type: {
-            type: "string",
-            description: "Issue type (e.g., Bug, Task, Story, Subtask)",
-          },
-          summary: {
-            type: "string",
-            description: "Issue title/summary",
-          },
-          description: {
-            type: "string",
-            description: "Issue description (optional)",
-          },
-        },
-        required: ["project", "issue_type", "summary"],
-      },
-    },
-    {
-      name: "add_comment",
-      description:
-        "Add a comment to a Jira issue. Use this to provide updates, responses, or resolutions.",
-      inputSchema: {
-        type: "object" as const,
-        properties: {
-          issue_key: {
-            type: "string",
-            description: "The issue key to comment on (e.g., SPR-1234)",
-          },
-          comment: {
-            type: "string",
-            description: "The comment text",
-          },
-        },
-        required: ["issue_key", "comment"],
-      },
-    },
-    {
-      name: "get_transitions",
-      description:
-        "Get available workflow transitions for an issue. Returns a list of possible statuses you can move the issue to.",
-      inputSchema: {
-        type: "object" as const,
-        properties: {
-          issue_key: {
-            type: "string",
-            description: "The issue key (e.g., SPR-1234)",
-          },
-        },
-        required: ["issue_key"],
-      },
-    },
-    {
-      name: "transition_issue",
-      description:
-        "Move an issue to a new status. First call get_transitions to see available transitions.",
-      inputSchema: {
-        type: "object" as const,
-        properties: {
-          issue_key: {
-            type: "string",
-            description: "The issue key (e.g., SPR-1234)",
-          },
-          transition_id: {
-            type: "string",
-            description:
-              "The transition ID from get_transitions (e.g., '11' for 'In Progress')",
-          },
-          comment: {
-            type: "string",
-            description: "Optional comment to add when transitioning",
-          },
-        },
-        required: ["issue_key", "transition_id"],
-      },
-    },
-    {
-      name: "update_issue",
-      description:
-        "Update issue fields like priority, labels, or custom fields.",
-      inputSchema: {
-        type: "object" as const,
-        properties: {
-          issue_key: {
-            type: "string",
-            description: "The issue key (e.g., SPR-1234)",
-          },
-          fields: {
-            type: "object",
-            description:
-              "Fields to update (e.g., {\"priority\": {\"name\": \"High\"}, \"labels\": [\"urgent\"]})",
-          },
-        },
-        required: ["issue_key", "fields"],
-      },
-    },
-  ];
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    return {
+      tools,
+    };
+  });
 
-  server.setRequestHandler(Tool, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const input = request.params.arguments as ToolInput;
 
     try {
@@ -439,19 +447,6 @@ async function main() {
         isError: true,
       };
     }
-  });
-
-  server.setRequestHandler(Tool, async (request) => {
-    // Tool discovery - list available tools
-    const availableTools: Tool[] = tools;
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: `Available Jira tools:\n${availableTools.map((t) => `- ${t.name}: ${t.description}`).join("\n")}`,
-        },
-      ],
-    };
   });
 
   const transport = new StdioServerTransport();
