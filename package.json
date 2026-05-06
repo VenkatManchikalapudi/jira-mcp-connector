@@ -4,6 +4,7 @@
   "description": "Jira MCP connector for Claude — enables Claude to read, search, and manage Jira issues",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {"jira-mcp": "dist/index.js"},
   "scripts": {
     "prepare": "npm run build",
     "build": "tsc",
