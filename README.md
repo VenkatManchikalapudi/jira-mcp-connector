@@ -16,7 +16,7 @@ A Model Context Protocol (MCP) server that enables Claude to read, search, creat
 ### Option 1: Install from npm (Organization Package Registry)
 
 ```bash
-npm install @net32/jira-mcp
+npm install -g git+https://bitbucket.org/net-32/jira-mcp-connector.git
 ```
 
 ### Option 2: Build from Source
@@ -52,11 +52,10 @@ The connector runs as a standalone server and must be configured in Claude's MCP
    {
      "mcpServers": {
        "jira": {
-         "command": "node",
-         "args": ["/path/to/jira-mcp-connector/dist/index.js"],
+         "command": "jira-mcp",
          "env": {
            "JIRA_HOST": "net32inc.atlassian.net",
-           "JIRA_USERNAME": "your-email@net32.com",
+           "JIRA_EMAIL": "your-email@net32.com",
            "JIRA_API_TOKEN": "your_api_token_here"
          }
        }
@@ -69,11 +68,10 @@ The connector runs as a standalone server and must be configured in Claude's MCP
    {
      "mcpServers": {
        "jira": {
-         "command": "node",
-         "args": ["/usr/local/lib/node_modules/@net32/jira-mcp/dist/index.js"],
+         "command": "jira-mcp",
          "env": {
            "JIRA_HOST": "net32inc.atlassian.net",
-           "JIRA_USERNAME": "your-email@net32.com",
+           "JIRA_EMAIL": "your-email@net32.com",
            "JIRA_API_TOKEN": "your_api_token_here"
          }
        }
@@ -91,11 +89,10 @@ The connector runs as a standalone server and must be configured in Claude's MCP
    ```json
    {
      "name": "jira",
-     "command": "node",
-     "args": ["/path/to/jira-mcp-connector/dist/index.js"],
+     "command": "jira-mcp",
      "env": {
        "JIRA_HOST": "net32inc.atlassian.net",
-       "JIRA_USERNAME": "your-email@net32.com",
+       "JIRA_EMAIL": "your-email@net32.com",
        "JIRA_API_TOKEN": "your_api_token_here"
      }
    }
@@ -247,7 +244,7 @@ Update issue fields.
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `JIRA_HOST` | Jira instance hostname | `net32inc.atlassian.net` |
-| `JIRA_USERNAME` | Email or username | `your-email@net32.com` |
+| `JIRA_EMAIL` | Email or username | `your-email@net32.com` |
 | `JIRA_API_TOKEN` | API token for authentication | (generate at id.atlassian.com) |
 
 ## Troubleshooting
