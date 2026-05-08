@@ -1,9 +1,7 @@
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
-  Server,
   CallToolRequestSchema,
   ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/server/index.js";
-import {
   TextContent,
 } from "@modelcontextprotocol/sdk/types.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -101,7 +99,7 @@ class JiraClient {
 
     if (description) {
       body.fields = {
-        ...body.fields,
+        ...(body.fields as Record<string, unknown>),
         description: {
           version: 1,
           type: "doc",
