@@ -349,6 +349,8 @@ async function main() {
   const server = new Server({
     name: "jira-mcp",
     version: "1.0.0",
+  }, {
+    capabilities: { tools: {} },
   });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
