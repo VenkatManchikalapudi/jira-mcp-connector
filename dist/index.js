@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -15720,6 +15721,8 @@ async function main() {
   const server = new Server({
     name: "jira-mcp",
     version: "1.0.0"
+  }, {
+    capabilities: { tools: {} }
   });
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
