@@ -160,18 +160,6 @@ Verify the issue key exists and you have access to that project.
 - Verify `node` is available: `which node`
 - Restart Claude completely after editing `settings.json`
 
-## Testing
-
-Verify the install works in a clean Docker environment:
-
-```bash
-bash scripts/test-install.sh
-```
-
-This builds a fresh `node:20-slim` image, installs the package, and checks the server starts. Expected output: `PASS: Jira MCP server connected and running...`
-
-Requires Docker to be running.
-
 ## Development
 
 ```bash
