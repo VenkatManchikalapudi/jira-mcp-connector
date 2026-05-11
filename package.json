@@ -1,14 +1,14 @@
 {
   "name": "@net32/jira-mcp",
   "version": "1.0.0",
-  "description": "Jira MCP connector for Claude \u2014 enables Claude to read, search, and manage Jira issues",
+  "description": "Jira MCP connector for Claude — enables Claude to read, search, and manage Jira issues",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "jira-mcp": "dist/index.js"
   },
   "scripts": {
-    "build": "./node_modules/.bin/tsc",
+    "build": "./node_modules/.bin/esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "test": "node --test dist/**/*.test.js"
@@ -26,6 +26,7 @@
     "typescript": "^5.3.0"
   },
   "devDependencies": {
+    "esbuild": "^0.28.0",
     "ts-node": "^10.9.0"
   }
 }
