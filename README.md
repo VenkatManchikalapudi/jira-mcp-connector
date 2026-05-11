@@ -164,7 +164,7 @@ Verify the issue key exists and you have access to that project.
 
 ```bash
 npm install       # install dependencies
-npm run build     # compile TypeScript
+npm run build     # compile and bundle with esbuild
 npm run dev       # run in dev mode (ts-node)
 npm test          # run tests
 ```
