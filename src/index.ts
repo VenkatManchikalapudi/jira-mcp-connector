@@ -78,7 +78,7 @@ class JiraClient {
       jql,
       maxResults: maxResults.toString(),
     });
-    return this.fetchJira(`/search?${params.toString()}`);
+    return this.fetchJira(`/search/jql?${params.toString()}`);
   }
 
   async createIssue(
