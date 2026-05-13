@@ -25,7 +25,10 @@ git clone https://bitbucket.org/net-32/jira-mcp-connector.git
 npm install -g ./jira-mcp-connector
 ```
 
-**2. Add to `~/.claude/settings.json`:**
+**2. Add the MCP server config:**
+
+Add the following to your Claude config file. Try `~/.claude/settings.json` first; if Claude doesn't pick it up, use `~/.claude.json` instead.
+
 ```json
 {
   "mcpServers": {
@@ -43,6 +46,8 @@ npm install -g ./jira-mcp-connector
 
 - **JIRA_EMAIL** — your Net32 Atlassian email (e.g. `alexa@net32.com`)
 - **JIRA_API_TOKEN** — create one at https://id.atlassian.com/manage-profile/security/api-tokens → **Create API token**, give it a name, copy the value
+
+> **Note:** If you use mise or nvm, `jira-mcp` may not be on Claude's PATH. Run `which jira-mcp` and use the full path as the `command` value instead.
 
 **3. Restart Claude** — then try `Get SPR-XXXX` to confirm it's working.
 
@@ -153,7 +158,7 @@ Update issue fields.
 ## Troubleshooting
 
 ### "Missing required environment variables"
-Ensure all three env vars are set in `~/.claude/settings.json` and Claude has been restarted.
+Ensure all three env vars are set in your Claude config file (`~/.claude/settings.json` or `~/.claude.json`) and Claude has been restarted.
 
 ### "Jira API error (401)"
 Verify your email and API token are correct. Regenerate the token at https://id.atlassian.com/manage-profile/security/api-tokens if needed.
@@ -162,9 +167,10 @@ Verify your email and API token are correct. Regenerate the token at https://id.
 Verify the issue key exists and you have access to that project.
 
 ### Connector not loading in Claude
-- Run `which jira-mcp` to confirm the binary is on your PATH
+- Try both `~/.claude/settings.json` and `~/.claude.json` — which one works depends on your Claude setup
+- Run `which jira-mcp` to confirm the binary is on your PATH; if using mise or nvm use the full path as the `command` value
 - Verify `node` is available: `which node`
-- Restart Claude completely after editing `settings.json`
+- Restart Claude completely after editing the config
 
 ## Development
 
