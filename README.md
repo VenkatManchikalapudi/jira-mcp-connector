@@ -15,7 +15,13 @@ A Model Context Protocol (MCP) server that enables Claude to read, search, creat
 
 **1. Clone and install:**
 ```bash
+# SSH (recommended — no password prompt)
+git clone git@bitbucket.org:net-32/jira-mcp-connector.git
+
+# HTTPS (if you don't have SSH keys set up for Bitbucket)
 git clone https://bitbucket.org/net-32/jira-mcp-connector.git
+```
+```bash
 npm install -g ./jira-mcp-connector
 ```
 
