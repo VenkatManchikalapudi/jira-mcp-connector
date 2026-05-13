@@ -25,7 +25,10 @@ git clone https://bitbucket.org/net-32/jira-mcp-connector.git
 npm install -g ./jira-mcp-connector
 ```
 
-**2. Add to `~/.claude/settings.json`:**
+**2. Add the MCP server config:**
+
+Add the following to your Claude config file. Try `~/.claude/settings.json` first; if Claude doesn't pick it up, use `~/.claude.json` instead.
+
 ```json
 {
   "mcpServers": {
@@ -43,6 +46,8 @@ npm install -g ./jira-mcp-connector
 
 - **JIRA_EMAIL** — your Net32 Atlassian email (e.g. `alexa@net32.com`)
 - **JIRA_API_TOKEN** — create one at https://id.atlassian.com/manage-profile/security/api-tokens → **Create API token**, give it a name, copy the value
+
+> **Note:** If you use mise or nvm, `jira-mcp` may not be on Claude's PATH. Run `which jira-mcp` and use the full path as the `command` value instead.
 
 **3. Restart Claude** — then try `Get SPR-XXXX` to confirm it's working.
 
