@@ -1,6 +1,6 @@
 # Jira MCP Connector
 
-A Model Context Protocol (MCP) server that enables Claude to read, search, create, and manage Jira issues directly from Claude Code.
+A Model Context Protocol (MCP) server that enables Claude to read, search, create, and manage Jira issues directly from Claude.
 
 ## Features
 
@@ -13,7 +13,17 @@ A Model Context Protocol (MCP) server that enables Claude to read, search, creat
 
 ## Installation
 
-**1. Clone and install:**
+### Prerequisites
+
+- **Node.js 18+** — check with `node --version`, install from https://nodejs.org if needed
+
+### Step 1 — Get a Jira API token
+
+1. Go to https://id.atlassian.com/manage-profile/security/api-tokens
+2. Click **Create API token**, give it a name (e.g. "Claude MCP"), copy the value
+
+### Step 2 — Install the connector
+
 ```bash
 # SSH (recommended — no password prompt)
 git clone git@bitbucket.org:net-32/jira-mcp-connector.git
@@ -25,9 +35,9 @@ git clone https://bitbucket.org/net-32/jira-mcp-connector.git
 npm install -g ./jira-mcp-connector
 ```
 
-**2. Add the MCP server config:**
+### Step 3 — Configure Claude
 
-Add the following to your Claude config file. Try `~/.claude/settings.json` first; if Claude doesn't pick it up, use `~/.claude.json` instead.
+The config block to add is the same for all setups — the only difference is which file you edit:
 
 ```json
 {
@@ -44,12 +54,22 @@ Add the following to your Claude config file. Try `~/.claude/settings.json` firs
 }
 ```
 
-- **JIRA_EMAIL** — your Net32 Atlassian email (e.g. `alexa@net32.com`)
-- **JIRA_API_TOKEN** — create one at https://id.atlassian.com/manage-profile/security/api-tokens → **Create API token**, give it a name, copy the value
+Replace `your-email@net32.com` and `your_api_token` with your values.
 
-> **Note:** If you use mise or nvm, `jira-mcp` may not be on Claude's PATH. Run `which jira-mcp` and use the full path as the `command` value instead.
+**Claude Desktop (macOS)**
+Open this file (create it if it doesn't exist):
+```
+~/Library/Application Support/Claude/claude_desktop_config.json
+```
 
-**3. Restart Claude** — then try `Get SPR-XXXX` to confirm it's working.
+**Claude Code**
+Try `~/.claude/settings.json` first; if Claude doesn't pick it up, use `~/.claude.json` instead.
+
+> **Note:** If you use mise or nvm, `jira-mcp` may not be on Claude's PATH. Run `which jira-mcp` after install and use the full path as the `command` value.
+
+### Step 4 — Restart Claude
+
+Fully quit and reopen Claude, then try `Get SPR-XXXX` to confirm it's working.
 
 ## Usage Examples
 
@@ -158,7 +178,7 @@ Update issue fields.
 ## Troubleshooting
 
 ### "Missing required environment variables"
-Ensure all three env vars are set in your Claude config file (`~/.claude/settings.json` or `~/.claude.json`) and Claude has been restarted.
+Ensure all three env vars are set in your config file and Claude has been fully restarted.
 
 ### "Jira API error (401)"
 Verify your email and API token are correct. Regenerate the token at https://id.atlassian.com/manage-profile/security/api-tokens if needed.
@@ -167,7 +187,8 @@ Verify your email and API token are correct. Regenerate the token at https://id.
 Verify the issue key exists and you have access to that project.
 
 ### Connector not loading in Claude
-- Try both `~/.claude/settings.json` and `~/.claude.json` — which one works depends on your Claude setup
+- **Claude Desktop:** check `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Claude Code:** try both `~/.claude/settings.json` and `~/.claude.json`
 - Run `which jira-mcp` to confirm the binary is on your PATH; if using mise or nvm use the full path as the `command` value
 - Verify `node` is available: `which node`
 - Restart Claude completely after editing the config
