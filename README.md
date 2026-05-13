@@ -11,9 +11,30 @@ A Model Context Protocol (MCP) server that enables Claude to read, search, creat
 - **Manage Workflows** — View transitions and move issues to new statuses
 - **Update Fields** — Update priority, labels, assignees, and custom fields
 
-## Installation
+## Quick Install for Non-Technical Users
 
-### Prerequisites
+If you're using Claude Desktop, you can have Claude install this for you. Open Claude Desktop and paste the following prompt — fill in your details before sending:
+
+```
+I want to install the Net32 Jira MCP connector so I can look up and manage 
+Jira tickets directly from Claude.
+
+Please help me:
+1. Check if Node.js is installed — if not, install it from https://nodejs.org
+2. Clone https://bitbucket.org/net-32/jira-mcp-connector.git and run: npm install -g ./jira-mcp-connector
+3. Find my Claude Desktop config file (~/Library/Application Support/Claude/claude_desktop_config.json) and add the MCP server config block with my credentials
+4. Restart Claude Desktop and confirm the Jira connector is working by fetching a ticket
+
+My details:
+- Jira email: [your-email@net32.com]
+- Jira API token: [paste your token here — get one at https://id.atlassian.com/manage-profile/security/api-tokens]
+```
+
+Once Claude completes the steps, fully quit and reopen Claude Desktop. Then ask it `Get SPR-XXXX` to confirm it's working.
+
+---
+
+## Installation
 
 - **Node.js 18+** — check with `node --version`, install from https://nodejs.org if needed
 
