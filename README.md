@@ -158,7 +158,7 @@ Update issue fields.
 ## Troubleshooting
 
 ### "Missing required environment variables"
-Ensure all three env vars are set in `~/.claude/settings.json` and Claude has been restarted.
+Ensure all three env vars are set in your Claude config file (`~/.claude/settings.json` or `~/.claude.json`) and Claude has been restarted.
 
 ### "Jira API error (401)"
 Verify your email and API token are correct. Regenerate the token at https://id.atlassian.com/manage-profile/security/api-tokens if needed.
@@ -167,9 +167,10 @@ Verify your email and API token are correct. Regenerate the token at https://id.
 Verify the issue key exists and you have access to that project.
 
 ### Connector not loading in Claude
-- Run `which jira-mcp` to confirm the binary is on your PATH
+- Try both `~/.claude/settings.json` and `~/.claude.json` — which one works depends on your Claude setup
+- Run `which jira-mcp` to confirm the binary is on your PATH; if using mise or nvm use the full path as the `command` value
 - Verify `node` is available: `which node`
-- Restart Claude completely after editing `settings.json`
+- Restart Claude completely after editing the config
 
 ## Development
 
