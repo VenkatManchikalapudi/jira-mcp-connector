@@ -4,7 +4,7 @@ A Model Context Protocol (MCP) server that enables Claude to read, search, creat
 
 ## Features
 
-- **Get Issue** — Fetch issue details by key (e.g. SPR-1234)
+- **Get Issue** — Fetch issue details by key (e.g. PROJ-1234)
 - **Search Issues** — Search using JQL (Jira Query Language)
 - **Create Issues** — Create new tickets programmatically
 - **Add Comments** — Post comments to issues
@@ -16,25 +16,28 @@ A Model Context Protocol (MCP) server that enables Claude to read, search, creat
 If you're using Claude Desktop, you can have Claude install this for you. Open Claude Desktop and paste the following prompt — fill in your details before sending:
 
 ```
-I want to install the Net32 Jira MCP connector so I can look up and manage 
+I want to install the Jira MCP connector so I can look up and manage 
 Jira tickets directly from Claude.
 
 Please help me:
 1. Check if Node.js is installed — if not, install it from https://nodejs.org
-2. Clone https://bitbucket.org/net-32/jira-mcp-connector.git and run: npm install -g ./jira-mcp-connector
+2. Clone https://github.com/VenkatManchikalapudi/jira-mcp-connector.git and run: npm install -g ./jira-mcp-connector
 3. Find my Claude Desktop config file (~/Library/Application Support/Claude/claude_desktop_config.json) and add the MCP server config block with my credentials
 4. Restart Claude Desktop and confirm the Jira connector is working by fetching a ticket
 
 My details:
-- Jira email: [your-email@net32.com]
+- Jira host: [your-org.atlassian.net]
+- Jira email: [your-email@your-org.com]
 - Jira API token: [paste your token here — get one at https://id.atlassian.com/manage-profile/security/api-tokens]
 ```
 
-Once Claude completes the steps, fully quit and reopen Claude Desktop. Then ask it `Get SPR-XXXX` to confirm it's working.
+Once Claude completes the steps, fully quit and reopen Claude Desktop. Then ask it `Get PROJ-XXXX` to confirm it's working.
 
 ---
 
 ## Installation
+
+### Prerequisites
 
 - **Node.js 18+** — check with `node --version`, install from https://nodejs.org if needed
 
@@ -47,10 +50,10 @@ Once Claude completes the steps, fully quit and reopen Claude Desktop. Then ask 
 
 ```bash
 # SSH (recommended — no password prompt)
-git clone git@bitbucket.org:net-32/jira-mcp-connector.git
+git clone git@github.com:VenkatManchikalapudi/jira-mcp-connector.git
 
-# HTTPS (if you don't have SSH keys set up for Bitbucket)
-git clone https://bitbucket.org/net-32/jira-mcp-connector.git
+# HTTPS
+git clone https://github.com/VenkatManchikalapudi/jira-mcp-connector.git
 ```
 ```bash
 npm install -g ./jira-mcp-connector
@@ -66,8 +69,8 @@ The config block to add is the same for all setups — the only difference is wh
     "jira": {
       "command": "jira-mcp",
       "env": {
-        "JIRA_HOST": "net32inc.atlassian.net",
-        "JIRA_EMAIL": "your-email@net32.com",
+        "JIRA_HOST": "your-org.atlassian.net",
+        "JIRA_EMAIL": "your-email@your-org.com",
         "JIRA_API_TOKEN": "your_api_token"
       }
     }
@@ -75,7 +78,7 @@ The config block to add is the same for all setups — the only difference is wh
 }
 ```
 
-Replace `your-email@net32.com` and `your_api_token` with your values.
+Replace the values with your Jira host, email, and API token.
 
 **Claude Desktop (macOS)**
 Open this file (create it if it doesn't exist):
@@ -90,33 +93,33 @@ Try `~/.claude/settings.json` first; if Claude doesn't pick it up, use `~/.claud
 
 ### Step 4 — Restart Claude
 
-Fully quit and reopen Claude, then try `Get SPR-XXXX` to confirm it's working.
+Fully quit and reopen Claude, then try `Get PROJ-XXXX` to confirm it's working.
 
 ## Usage Examples
 
 **Get an issue:**
 ```
-Read SPR-2275 to understand the current status
+Read PROJ-1234 to understand the current status
 ```
 
 **Search for open bugs:**
 ```
-Find all open bugs in the SPR project assigned to me
+Find all open bugs assigned to me
 ```
 
 **Create a ticket:**
 ```
-Create a task "Update documentation for Jira integration" in the SPR project
+Create a task "Update API documentation" in the PROJ project
 ```
 
 **Add a comment:**
 ```
-Comment on SPR-2275: "This has been resolved in PR #1279"
+Comment on PROJ-1234: "This has been resolved in PR #42"
 ```
 
 **Move issue to Done:**
 ```
-Transition SPR-2275 to Done with a comment "Merged and deployed"
+Transition PROJ-1234 to Done with a comment "Merged and deployed"
 ```
 
 ## JQL Query Examples
@@ -125,8 +128,8 @@ Transition SPR-2275 to Done with a comment "Merged and deployed"
 # Issues assigned to you
 assignee = currentUser()
 
-# Open bugs in SPR project
-project = SPR AND type = Bug AND status IN (Open, "In Progress")
+# Open bugs in a project
+project = PROJ AND type = Bug AND status IN (Open, "In Progress")
 
 # Issues updated in the last 7 days
 updated >= -7d
@@ -138,7 +141,7 @@ labels in (urgent, security)
 priority >= High
 
 # Sprint board issues
-sprint = "Sprint 45" AND status != Done
+sprint in openSprints() AND status != Done
 ```
 
 See Jira's [Advanced Searching documentation](https://www.atlassian.com/software/jira/guides/expand-jira/jira-query-language) for more.
@@ -148,7 +151,7 @@ See Jira's [Advanced Searching documentation](https://www.atlassian.com/software
 ### `get_issue`
 Fetch a single issue by key.
 
-- `issue_key` (string, required): e.g. `SPR-1234`
+- `issue_key` (string, required): e.g. `PROJ-1234`
 
 ### `search_issues`
 Search for issues using JQL.
@@ -159,7 +162,7 @@ Search for issues using JQL.
 ### `create_issue`
 Create a new issue.
 
-- `project` (string, required): e.g. `SPR`
+- `project` (string, required): e.g. `PROJ`
 - `issue_type` (string, required): Bug, Task, Story, Subtask, etc.
 - `summary` (string, required): Issue title
 - `description` (string, optional)
@@ -192,8 +195,8 @@ Update issue fields.
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `JIRA_HOST` | Jira instance hostname | `net32inc.atlassian.net` |
-| `JIRA_EMAIL` | Your Atlassian account email | `your-email@net32.com` |
+| `JIRA_HOST` | Jira instance hostname | `your-org.atlassian.net` |
+| `JIRA_EMAIL` | Your Atlassian account email | `your-email@your-org.com` |
 | `JIRA_API_TOKEN` | API token for authentication | (generate at id.atlassian.com) |
 
 ## Troubleshooting
