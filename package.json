@@ -19,7 +19,7 @@
     "claude",
     "modelcontextprotocol"
   ],
-  "author": "Net32",
+  "author": "Venkat Manchikalapudi (https://github.com/VenkatManchikalapudi)",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
