@@ -15459,37 +15459,32 @@ var JiraClient = class {
     const credentials = `${this.config.username}:${this.config.apiToken}`;
     return `Basic ${Buffer.from(credentials).toString("base64")}`;
   }
-  async fetchJira(endpoint, method = "GET", body) {
-    const url = `https://${this.config.host}/rest/api/3${endpoint}`;
+  async fetchJira(endpoint, method = "GET", body, baseUrl = "/rest/api/3") {
+    const url = `https://${this.config.host}${baseUrl}${endpoint}`;
     const headers = {
       Authorization: this.getAuthHeader(),
       "Content-Type": "application/json",
       Accept: "application/json"
     };
-    const options = {
-      method,
-      headers
-    };
-    if (body) {
-      options.body = JSON.stringify(body);
-    }
+    const options = { method, headers };
+    if (body) options.body = JSON.stringify(body);
     const response = await fetch(url, options);
     if (!response.ok) {
       const error2 = await response.text();
-      throw new Error(
-        `Jira API error (${response.status}): ${error2}`
-      );
+      throw new Error(`Jira API error (${response.status}): ${error2}`);
     }
+    if (response.status === 204) return { success: true };
     return response.json();
   }
+  async fetchAgile(endpoint, method = "GET", body) {
+    return this.fetchJira(endpoint, method, body, "/rest/agile/1.0");
+  }
+  // --- Existing tools ---
   async getIssue(issueKey) {
     return this.fetchJira(`/issue/${issueKey}`);
   }
   async searchIssues(jql, maxResults = 20) {
-    const params = new URLSearchParams({
-      jql,
-      maxResults: maxResults.toString()
-    });
+    const params = new URLSearchParams({ jql, maxResults: maxResults.toString() });
     return this.fetchJira(`/search/jql?${params.toString()}`);
   }
   async createIssue(project, issueType, summary, description, fields) {
@@ -15507,12 +15502,7 @@ var JiraClient = class {
         description: {
           version: 1,
           type: "doc",
-          content: [
-            {
-              type: "paragraph",
-              content: [{ type: "text", text: description }]
-            }
-          ]
+          content: [{ type: "paragraph", content: [{ type: "text", text: description }] }]
         }
       };
     }
@@ -15523,138 +15513,215 @@ var JiraClient = class {
       body: {
         version: 1,
         type: "doc",
-        content: [
-          {
-            type: "paragraph",
-            content: [{ type: "text", text: comment }]
-          }
-        ]
+        content: [{ type: "paragraph", content: [{ type: "text", text: comment }] }]
       }
     };
     return this.fetchJira(`/issue/${issueKey}/comment`, "POST", body);
   }
   async transitionIssue(issueKey, transitionId, comment) {
-    const body = {
-      transition: { id: transitionId }
-    };
+    const body = { transition: { id: transitionId } };
     if (comment) {
       body.update = {
-        comment: [
-          {
-            add: {
-              body: {
-                version: 1,
-                type: "doc",
-                content: [
-                  {
-                    type: "paragraph",
-                    content: [{ type: "text", text: comment }]
-                  }
-                ]
-              }
+        comment: [{
+          add: {
+            body: {
+              version: 1,
+              type: "doc",
+              content: [{ type: "paragraph", content: [{ type: "text", text: comment }] }]
             }
           }
-        ]
+        }]
       };
     }
     await this.fetchJira(`/issue/${issueKey}/transitions`, "POST", body);
   }
   async updateIssue(issueKey, fields) {
-    const body = { fields };
-    await this.fetchJira(`/issue/${issueKey}`, "PUT", body);
+    await this.fetchJira(`/issue/${issueKey}`, "PUT", { fields });
   }
   async getTransitions(issueKey) {
     return this.fetchJira(`/issue/${issueKey}/transitions`);
+  }
+  // --- New high-value tools ---
+  async deleteIssue(issueKey) {
+    return this.fetchJira(`/issue/${issueKey}`, "DELETE");
+  }
+  async batchCreateIssues(issues) {
+    return this.fetchJira("/issue/bulk", "POST", { issueUpdates: issues });
+  }
+  async editComment(issueKey, commentId, comment) {
+    const body = {
+      body: {
+        version: 1,
+        type: "doc",
+        content: [{ type: "paragraph", content: [{ type: "text", text: comment }] }]
+      }
+    };
+    return this.fetchJira(`/issue/${issueKey}/comment/${commentId}`, "PUT", body);
+  }
+  async addWorklog(issueKey, timeSpent, comment) {
+    const body = { timeSpent };
+    if (comment) {
+      body.comment = {
+        version: 1,
+        type: "doc",
+        content: [{ type: "paragraph", content: [{ type: "text", text: comment }] }]
+      };
+    }
+    return this.fetchJira(`/issue/${issueKey}/worklog`, "POST", body);
+  }
+  async getLinkTypes() {
+    return this.fetchJira("/issueLinkType");
+  }
+  async createIssueLink(linkType, inwardIssue, outwardIssue, comment) {
+    const body = {
+      type: { name: linkType },
+      inwardIssue: { key: inwardIssue },
+      outwardIssue: { key: outwardIssue }
+    };
+    if (comment) {
+      body.comment = {
+        body: {
+          version: 1,
+          type: "doc",
+          content: [{ type: "paragraph", content: [{ type: "text", text: comment }] }]
+        }
+      };
+    }
+    return this.fetchJira("/issueLink", "POST", body);
+  }
+  async getAllProjects() {
+    return this.fetchJira("/project?expand=description");
+  }
+  async getAgileBoards(projectKey) {
+    const params = projectKey ? `?projectKeyOrId=${projectKey}` : "";
+    return this.fetchAgile(`/board${params}`);
+  }
+  async getBoardSprints(boardId, state) {
+    const params = state ? `?state=${state}` : "";
+    return this.fetchAgile(`/board/${boardId}/sprint${params}`);
+  }
+  async getSprintIssues(sprintId) {
+    return this.fetchAgile(`/sprint/${sprintId}/issue`);
   }
 };
 var tools = [
   {
     name: "get_issue",
-    description: "Fetch a Jira issue by its key (e.g., SPR-1234). Returns issue details including title, description, status, assignee, and more.",
+    description: "Fetch a Jira issue by its key (e.g., PROJ-1234). Returns issue details including title, description, status, assignee, and more.",
     inputSchema: {
       type: "object",
       properties: {
-        issue_key: {
-          type: "string",
-          description: "The Jira issue key (e.g., SPR-1234)"
-        }
+        issue_key: { type: "string", description: "The Jira issue key (e.g., PROJ-1234)" }
       },
       required: ["issue_key"]
     }
   },
   {
     name: "search_issues",
-    description: "Search Jira issues using JQL (Jira Query Language). Examples: 'project = SPR AND status = Open', 'assignee = currentUser() AND due <= now()'",
+    description: "Search Jira issues using JQL (Jira Query Language). Examples: 'project = PROJ AND status = Open', 'assignee = currentUser() AND due <= now()'",
     inputSchema: {
       type: "object",
       properties: {
-        jql: {
-          type: "string",
-          description: "JQL query string (e.g., 'project = SPR AND assignee = currentUser()')"
-        },
-        max_results: {
-          type: "number",
-          description: "Maximum number of results to return (default: 20, max: 100)",
-          default: 20
-        }
+        jql: { type: "string", description: "JQL query string" },
+        max_results: { type: "number", description: "Maximum results to return (default: 20, max: 100)", default: 20 }
       },
       required: ["jql"]
     }
   },
   {
     name: "create_issue",
-    description: "Create a new Jira issue in a project. Returns the newly created issue key.",
+    description: "Create a new Jira issue. Returns the newly created issue key.",
     inputSchema: {
       type: "object",
       properties: {
-        project: {
-          type: "string",
-          description: "Project key (e.g., SPR)"
-        },
-        issue_type: {
-          type: "string",
-          description: "Issue type (e.g., Bug, Task, Story, Subtask)"
-        },
-        summary: {
-          type: "string",
-          description: "Issue title/summary"
-        },
-        description: {
-          type: "string",
-          description: "Issue description (optional)"
-        }
+        project: { type: "string", description: "Project key (e.g., PROJ)" },
+        issue_type: { type: "string", description: "Issue type (e.g., Bug, Task, Story, Subtask)" },
+        summary: { type: "string", description: "Issue title/summary" },
+        description: { type: "string", description: "Issue description (optional)" }
       },
       required: ["project", "issue_type", "summary"]
     }
   },
   {
-    name: "add_comment",
-    description: "Add a comment to a Jira issue. Use this to provide updates, responses, or resolutions.",
+    name: "batch_create_issues",
+    description: "Create multiple Jira issues at once. Each issue requires project, issue_type, and summary.",
     inputSchema: {
       type: "object",
       properties: {
-        issue_key: {
-          type: "string",
-          description: "The issue key to comment on (e.g., SPR-1234)"
-        },
-        comment: {
-          type: "string",
-          description: "The comment text"
+        issues: {
+          type: "array",
+          description: "Array of issues to create",
+          items: {
+            type: "object",
+            properties: {
+              project: { type: "string", description: "Project key" },
+              issue_type: { type: "string", description: "Issue type" },
+              summary: { type: "string", description: "Issue summary" },
+              description: { type: "string", description: "Issue description (optional)" }
+            },
+            required: ["project", "issue_type", "summary"]
+          }
         }
+      },
+      required: ["issues"]
+    }
+  },
+  {
+    name: "delete_issue",
+    description: "Delete a Jira issue permanently.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        issue_key: { type: "string", description: "The issue key to delete (e.g., PROJ-1234)" }
+      },
+      required: ["issue_key"]
+    }
+  },
+  {
+    name: "add_comment",
+    description: "Add a comment to a Jira issue.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        issue_key: { type: "string", description: "The issue key (e.g., PROJ-1234)" },
+        comment: { type: "string", description: "The comment text" }
       },
       required: ["issue_key", "comment"]
     }
   },
   {
-    name: "get_transitions",
-    description: "Get available workflow transitions for an issue. Returns a list of possible statuses you can move the issue to.",
+    name: "edit_comment",
+    description: "Edit an existing comment on a Jira issue.",
     inputSchema: {
       type: "object",
       properties: {
-        issue_key: {
-          type: "string",
-          description: "The issue key (e.g., SPR-1234)"
-        }
+        issue_key: { type: "string", description: "The issue key (e.g., PROJ-1234)" },
+        comment_id: { type: "string", description: "The ID of the comment to edit" },
+        comment: { type: "string", description: "The updated comment text" }
+      },
+      required: ["issue_key", "comment_id", "comment"]
+    }
+  },
+  {
+    name: "add_worklog",
+    description: "Log time spent on a Jira issue.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        issue_key: { type: "string", description: "The issue key (e.g., PROJ-1234)" },
+        time_spent: { type: "string", description: "Time spent (e.g., '2h', '30m', '1h 30m')" },
+        comment: { type: "string", description: "Optional worklog comment" }
+      },
+      required: ["issue_key", "time_spent"]
+    }
+  },
+  {
+    name: "get_transitions",
+    description: "Get available workflow transitions for an issue.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        issue_key: { type: "string", description: "The issue key (e.g., PROJ-1234)" }
       },
       required: ["issue_key"]
     }
@@ -15665,18 +15732,9 @@ var tools = [
     inputSchema: {
       type: "object",
       properties: {
-        issue_key: {
-          type: "string",
-          description: "The issue key (e.g., SPR-1234)"
-        },
-        transition_id: {
-          type: "string",
-          description: "The transition ID from get_transitions (e.g., '11' for 'In Progress')"
-        },
-        comment: {
-          type: "string",
-          description: "Optional comment to add when transitioning"
-        }
+        issue_key: { type: "string", description: "The issue key (e.g., PROJ-1234)" },
+        transition_id: { type: "string", description: "The transition ID from get_transitions" },
+        comment: { type: "string", description: "Optional comment to add when transitioning" }
       },
       required: ["issue_key", "transition_id"]
     }
@@ -15687,16 +15745,76 @@ var tools = [
     inputSchema: {
       type: "object",
       properties: {
-        issue_key: {
-          type: "string",
-          description: "The issue key (e.g., SPR-1234)"
-        },
-        fields: {
-          type: "object",
-          description: 'Fields to update (e.g., {"priority": {"name": "High"}, "labels": ["urgent"]})'
-        }
+        issue_key: { type: "string", description: "The issue key (e.g., PROJ-1234)" },
+        fields: { type: "object", description: 'Fields to update (e.g., {"priority": {"name": "High"}})' }
       },
       required: ["issue_key", "fields"]
+    }
+  },
+  {
+    name: "get_link_types",
+    description: "Get all available issue link types (e.g., 'blocks', 'relates to', 'duplicates').",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      required: []
+    }
+  },
+  {
+    name: "create_issue_link",
+    description: "Link two Jira issues together. Use get_link_types to see available link types.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        link_type: { type: "string", description: "Link type name (e.g., 'blocks', 'relates to')" },
+        inward_issue: { type: "string", description: "The inward issue key (e.g., PROJ-1234)" },
+        outward_issue: { type: "string", description: "The outward issue key (e.g., PROJ-5678)" },
+        comment: { type: "string", description: "Optional comment" }
+      },
+      required: ["link_type", "inward_issue", "outward_issue"]
+    }
+  },
+  {
+    name: "get_all_projects",
+    description: "Get all Jira projects accessible to the current user.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      required: []
+    }
+  },
+  {
+    name: "get_agile_boards",
+    description: "Get agile boards, optionally filtered by project.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_key: { type: "string", description: "Optional project key to filter boards" }
+      },
+      required: []
+    }
+  },
+  {
+    name: "get_board_sprints",
+    description: "Get sprints for a board, optionally filtered by state.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        board_id: { type: "number", description: "The board ID from get_agile_boards" },
+        state: { type: "string", description: "Sprint state: active, future, or closed" }
+      },
+      required: ["board_id"]
+    }
+  },
+  {
+    name: "get_sprint_issues",
+    description: "Get all issues in a specific sprint.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        sprint_id: { type: "number", description: "The sprint ID from get_board_sprints" }
+      },
+      required: ["sprint_id"]
     }
   }
 ];
@@ -15705,9 +15823,7 @@ async function main() {
   const jiraUsername = process.env.JIRA_EMAIL;
   const jiraToken = process.env.JIRA_API_TOKEN;
   if (!jiraHost || !jiraUsername || !jiraToken) {
-    console.error(
-      "Error: Missing required environment variables:"
-    );
+    console.error("Error: Missing required environment variables:");
     console.error("  - JIRA_HOST (e.g., your-org.atlassian.net)");
     console.error("  - JIRA_EMAIL (e.g., your@email.com)");
     console.error("  - JIRA_API_TOKEN (from https://id.atlassian.com/manage-profile/security/api-tokens)");
@@ -15724,92 +15840,113 @@ async function main() {
   }, {
     capabilities: { tools: {} }
   });
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
-    return {
-      tools
-    };
-  });
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const input = request.params.arguments;
     try {
       let result;
       switch (request.params.name) {
-        case "get_issue": {
-          const issueKey = input.issue_key;
-          result = await jiraClient.getIssue(issueKey);
+        case "get_issue":
+          result = await jiraClient.getIssue(input.issue_key);
           break;
-        }
-        case "search_issues": {
-          const jql = input.jql;
-          const maxResults = input.max_results || 20;
-          result = await jiraClient.searchIssues(jql, maxResults);
+        case "search_issues":
+          result = await jiraClient.searchIssues(input.jql, input.max_results || 20);
           break;
-        }
-        case "create_issue": {
-          const project = input.project;
-          const issueType = input.issue_type;
-          const summary = input.summary;
-          const description = input.description;
+        case "create_issue":
           result = await jiraClient.createIssue(
-            project,
-            issueType,
-            summary,
-            description
+            input.project,
+            input.issue_type,
+            input.summary,
+            input.description
           );
           break;
-        }
-        case "add_comment": {
-          const issueKey = input.issue_key;
-          const comment = input.comment;
-          result = await jiraClient.addComment(issueKey, comment);
+        case "batch_create_issues": {
+          const issues = input.issues.map((i) => ({
+            fields: {
+              project: { key: i.project },
+              issuetype: { name: i.issue_type },
+              summary: i.summary,
+              ...i.description ? {
+                description: {
+                  version: 1,
+                  type: "doc",
+                  content: [{ type: "paragraph", content: [{ type: "text", text: i.description }] }]
+                }
+              } : {}
+            }
+          }));
+          result = await jiraClient.batchCreateIssues(issues);
           break;
         }
-        case "get_transitions": {
-          const issueKey = input.issue_key;
-          result = await jiraClient.getTransitions(issueKey);
+        case "delete_issue":
+          await jiraClient.deleteIssue(input.issue_key);
+          result = { success: true, message: `Issue ${input.issue_key} deleted` };
           break;
-        }
-        case "transition_issue": {
-          const issueKey = input.issue_key;
-          const transitionId = input.transition_id;
-          const comment = input.comment;
-          await jiraClient.transitionIssue(issueKey, transitionId, comment);
-          result = {
-            success: true,
-            message: `Issue ${issueKey} transitioned successfully`
-          };
+        case "add_comment":
+          result = await jiraClient.addComment(input.issue_key, input.comment);
           break;
-        }
-        case "update_issue": {
-          const issueKey = input.issue_key;
-          const fields = input.fields;
-          await jiraClient.updateIssue(issueKey, fields);
-          result = {
-            success: true,
-            message: `Issue ${issueKey} updated successfully`
-          };
+        case "edit_comment":
+          result = await jiraClient.editComment(
+            input.issue_key,
+            input.comment_id,
+            input.comment
+          );
           break;
-        }
+        case "add_worklog":
+          result = await jiraClient.addWorklog(
+            input.issue_key,
+            input.time_spent,
+            input.comment
+          );
+          break;
+        case "get_transitions":
+          result = await jiraClient.getTransitions(input.issue_key);
+          break;
+        case "transition_issue":
+          await jiraClient.transitionIssue(
+            input.issue_key,
+            input.transition_id,
+            input.comment
+          );
+          result = { success: true, message: `Issue ${input.issue_key} transitioned successfully` };
+          break;
+        case "update_issue":
+          await jiraClient.updateIssue(input.issue_key, input.fields);
+          result = { success: true, message: `Issue ${input.issue_key} updated successfully` };
+          break;
+        case "get_link_types":
+          result = await jiraClient.getLinkTypes();
+          break;
+        case "create_issue_link":
+          result = await jiraClient.createIssueLink(
+            input.link_type,
+            input.inward_issue,
+            input.outward_issue,
+            input.comment
+          );
+          break;
+        case "get_all_projects":
+          result = await jiraClient.getAllProjects();
+          break;
+        case "get_agile_boards":
+          result = await jiraClient.getAgileBoards(input.project_key);
+          break;
+        case "get_board_sprints":
+          result = await jiraClient.getBoardSprints(input.board_id, input.state);
+          break;
+        case "get_sprint_issues":
+          result = await jiraClient.getSprintIssues(input.sprint_id);
+          break;
         default:
           throw new Error(`Unknown tool: ${request.params.name}`);
       }
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(result, null, 2)
-          }
-        ]
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
       };
     } catch (error2) {
       const errorMessage = error2 instanceof Error ? error2.message : "Unknown error";
       return {
-        content: [
-          {
-            type: "text",
-            text: `Error: ${errorMessage}`
-          }
-        ],
+        content: [{ type: "text", text: `Error: ${errorMessage}` }],
         isError: true
       };
     }
