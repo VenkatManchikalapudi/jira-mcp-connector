@@ -1,5 +1,5 @@
 {
-  "name": "@net32/jira-mcp",
+  "name": "jira-mcp-connector",
   "version": "1.0.0",
   "description": "Jira MCP connector for Claude — enables Claude to read, search, and manage Jira issues",
   "type": "module",
