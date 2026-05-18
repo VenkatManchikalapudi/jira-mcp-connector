@@ -226,6 +226,10 @@ npm run dev       # run in dev mode (ts-node)
 npm test          # run tests
 ```
 
+## Author
+
+Built by [Venkat Manchikalapudi](https://github.com/VenkatManchikalapudi)
+
 ## License
 
 MIT
