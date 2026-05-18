@@ -148,48 +148,97 @@ See Jira's [Advanced Searching documentation](https://www.atlassian.com/software
 
 ## Tools Reference
 
-### `get_issue`
-Fetch a single issue by key.
+### Issues
 
+#### `get_issue`
+Fetch a single issue by key.
 - `issue_key` (string, required): e.g. `PROJ-1234`
 
-### `search_issues`
+#### `search_issues`
 Search for issues using JQL.
-
 - `jql` (string, required): JQL query string
 - `max_results` (number, optional): default 20, max 100
 
-### `create_issue`
+#### `create_issue`
 Create a new issue.
-
 - `project` (string, required): e.g. `PROJ`
 - `issue_type` (string, required): Bug, Task, Story, Subtask, etc.
-- `summary` (string, required): Issue title
+- `summary` (string, required)
 - `description` (string, optional)
 
-### `add_comment`
-Add a comment to an issue.
+#### `batch_create_issues`
+Create multiple issues at once.
+- `issues` (array, required): each item needs `project`, `issue_type`, `summary`, and optional `description`
 
+#### `delete_issue`
+Delete an issue permanently.
+- `issue_key` (string, required)
+
+#### `update_issue`
+Update issue fields like priority, labels, or custom fields.
+- `issue_key` (string, required)
+- `fields` (object, required): e.g. `{"priority": {"name": "High"}}`
+
+### Comments & Worklogs
+
+#### `add_comment`
+Add a comment to an issue.
 - `issue_key` (string, required)
 - `comment` (string, required)
 
-### `get_transitions`
-Get available workflow transitions for an issue.
+#### `edit_comment`
+Edit an existing comment.
+- `issue_key` (string, required)
+- `comment_id` (string, required)
+- `comment` (string, required)
 
+#### `add_worklog`
+Log time spent on an issue.
+- `issue_key` (string, required)
+- `time_spent` (string, required): e.g. `2h`, `30m`, `1h 30m`
+- `comment` (string, optional)
+
+### Workflow
+
+#### `get_transitions`
+Get available workflow transitions for an issue.
 - `issue_key` (string, required)
 
-### `transition_issue`
+#### `transition_issue`
 Move an issue to a new status.
-
 - `issue_key` (string, required)
 - `transition_id` (string, required): from `get_transitions`
 - `comment` (string, optional)
 
-### `update_issue`
-Update issue fields.
+### Issue Links
 
-- `issue_key` (string, required)
-- `fields` (object, required): e.g. `{"priority": {"name": "High"}}`
+#### `get_link_types`
+Get all available link types (e.g. blocks, relates to, duplicates).
+
+#### `create_issue_link`
+Link two issues together.
+- `link_type` (string, required): from `get_link_types`
+- `inward_issue` (string, required): e.g. `PROJ-1234`
+- `outward_issue` (string, required): e.g. `PROJ-5678`
+- `comment` (string, optional)
+
+### Projects & Boards
+
+#### `get_all_projects`
+Get all Jira projects accessible to the current user.
+
+#### `get_agile_boards`
+Get agile boards, optionally filtered by project.
+- `project_key` (string, optional)
+
+#### `get_board_sprints`
+Get sprints for a board.
+- `board_id` (number, required): from `get_agile_boards`
+- `state` (string, optional): `active`, `future`, or `closed`
+
+#### `get_sprint_issues`
+Get all issues in a sprint.
+- `sprint_id` (number, required): from `get_board_sprints`
 
 ## Environment Variables
 
