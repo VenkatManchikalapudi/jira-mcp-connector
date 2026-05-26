@@ -1,6 +1,6 @@
 # Jira MCP Connector
 
-A Model Context Protocol (MCP) server that enables Claude and ChatGPT to read, search, create, and manage Jira issues directly from your AI assistant.
+A Model Context Protocol (MCP) server that enables Claude, ChatGPT, and GitHub Copilot to read, search, create, and manage Jira issues directly from your AI assistant.
 
 ## Features
 
