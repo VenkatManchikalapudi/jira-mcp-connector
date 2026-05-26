@@ -15668,13 +15668,14 @@ var tools = [
   },
   {
     name: "delete_issue",
-    description: "Delete a Jira issue permanently.",
+    description: "Permanently delete a Jira issue. This action is irreversible. You must pass confirm: true to proceed.",
     inputSchema: {
       type: "object",
       properties: {
-        issue_key: { type: "string", description: "The issue key to delete (e.g., PROJ-1234)" }
+        issue_key: { type: "string", description: "The issue key to delete (e.g., PROJ-1234)" },
+        confirm: { type: "boolean", description: "Must be true to confirm permanent deletion" }
       },
-      required: ["issue_key"]
+      required: ["issue_key", "confirm"]
     }
   },
   {
@@ -15824,7 +15825,7 @@ async function main() {
   const jiraToken = process.env.JIRA_API_TOKEN;
   if (!jiraHost || !jiraUsername || !jiraToken) {
     console.error("Error: Missing required environment variables:");
-    console.error("  - JIRA_HOST (e.g., your-org.atlassian.net)");
+    console.error("  - JIRA_HOST (e.g., net32inc.atlassian.net)");
     console.error("  - JIRA_EMAIL (e.g., your@email.com)");
     console.error("  - JIRA_API_TOKEN (from https://id.atlassian.com/manage-profile/security/api-tokens)");
     process.exit(1);
@@ -15879,8 +15880,12 @@ async function main() {
           break;
         }
         case "delete_issue":
+          if (!input.confirm) {
+            result = { error: "Deletion requires confirm: true. This action is permanent and cannot be undone." };
+            break;
+          }
           await jiraClient.deleteIssue(input.issue_key);
-          result = { success: true, message: `Issue ${input.issue_key} deleted` };
+          result = { success: true, message: `Issue ${input.issue_key} permanently deleted` };
           break;
         case "add_comment":
           result = await jiraClient.addComment(input.issue_key, input.comment);

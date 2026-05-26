@@ -1,6 +1,6 @@
 # Jira MCP Connector
 
-A Model Context Protocol (MCP) server that enables Claude, ChatGPT, and GitHub Copilot to read, search, create, and manage Jira issues directly from your AI assistant.
+A Model Context Protocol (MCP) server that enables Claude and ChatGPT to read, search, create, and manage Jira issues directly from your AI assistant.
 
 ## Features
 
@@ -106,13 +106,13 @@ npm install -g ./jira-mcp-connector
 
 ### Step 3 — Configure your AI assistant
 
-The config block is the same for all setups — the only difference is which file you edit:
+After install, run `which jira-mcp` to get the full path to the binary and use that as the `command` value. This avoids PATH issues with mise, nvm, or other version managers.
 
 ```json
 {
   "mcpServers": {
     "jira": {
-      "command": "jira-mcp",
+      "command": "/usr/local/bin/jira-mcp",
       "env": {
         "JIRA_HOST": "your-org.atlassian.net",
         "JIRA_EMAIL": "your-email@your-org.com",
@@ -123,7 +123,9 @@ The config block is the same for all setups — the only difference is which fil
 }
 ```
 
-Replace `your-email@your-org.com` and `your_api_token` with your values.
+Replace `/usr/local/bin/jira-mcp` with the path from `which jira-mcp`, and fill in your email and API token.
+
+> **macOS only** — Windows is not currently tested or supported.
 
 **Claude Desktop (macOS)**
 Open this file (create it if it doesn't exist):
@@ -160,8 +162,6 @@ Copilot uses a slightly different config format — `"servers"` instead of `"mcp
 
 Alternatively, add the same block under `github.copilot.mcp.servers` in your VS Code user settings (`settings.json`) to apply it globally across all workspaces.
 
-> **Note:** If you use mise or nvm, `jira-mcp` may not be on your PATH. Run `which jira-mcp` after install and use the full path as the `command` value.
-
 ### Step 4 — Restart your AI assistant
 
 Fully quit and reopen the app, then try `Get PROJ-XXXX` to confirm it's working.
@@ -175,12 +175,12 @@ Read PROJ-2275 to understand the current status
 
 **Search for open bugs:**
 ```
-Find all open bugs in the SPR project assigned to me
+Find all open bugs in the PROJ project assigned to me
 ```
 
 **Create a ticket:**
 ```
-Create a task "Update documentation for Jira integration" in the SPR project
+Create a task "Update documentation for Jira integration" in the PROJ project
 ```
 
 **Add a comment:**
@@ -242,13 +242,18 @@ Create multiple issues at once.
 - `issues` (array, required): each item needs `project`, `issue_type`, `summary`, and optional `description`
 
 #### `delete_issue`
-Delete an issue permanently.
+Permanently delete an issue. **This action is irreversible.**
 - `issue_key` (string, required)
+- `confirm` (boolean, required): must be `true` to proceed
 
 #### `update_issue`
 Update issue fields like priority, labels, or custom fields.
 - `issue_key` (string, required)
-- `fields` (object, required): e.g. `{"priority": {"name": "High"}}`
+- `fields` (object, required): field values to update. Examples:
+  - Priority: `{"priority": {"name": "High"}}`
+  - Labels: `{"labels": ["urgent", "backend"]}`
+  - Assignee: `{"assignee": {"accountId": "5b10a2844c20165700ede21g"}}`
+  - Custom field: `{"customfield_10016": 8}` (story points)
 
 ### Comments & Worklogs
 
