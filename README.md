@@ -1,6 +1,6 @@
 # Jira MCP Connector
 
-A Model Context Protocol (MCP) server that enables Claude to read, search, create, and manage Jira issues directly from Claude.
+A Model Context Protocol (MCP) server that enables Claude, ChatGPT, and GitHub Copilot to read, search, create, and manage Jira issues directly from your AI assistant.
 
 ## Features
 
@@ -21,23 +21,68 @@ Jira tickets directly from Claude.
 
 Please help me:
 1. Check if Node.js is installed — if not, install it from https://nodejs.org
-2. Clone https://github.com/VenkatManchikalapudi/jira-mcp-connector.git and run: npm install -g ./jira-mcp-connector
-3. Find my Claude Desktop config file (~/Library/Application Support/Claude/claude_desktop_config.json) and add the MCP server config block with my credentials
-4. Restart Claude Desktop and confirm the Jira connector is working by fetching a ticket
+2. Check if nvm or mise is installed (run: command -v nvm; command -v mise). If mise is installed, make sure Node is enabled globally, not just for git folders: run `mise use --global node@lts`
+3. Clone https://github.com/VenkatManchikalapudi/jira-mcp-connector.git and run: npm install -g ./jira-mcp-connector
+4. Run `which jira-mcp` to get the full path to the installed binary
+5. Find my Claude Desktop config file (~/Library/Application Support/Claude/claude_desktop_config.json) and add the MCP server config block with my credentials — use the full path from step 4 as the "command" value
+6. Restart Claude Desktop and confirm the Jira connector is working by fetching a ticket
 
 My details:
-- Jira host: [your-org.atlassian.net]
 - Jira email: [your-email@your-org.com]
 - Jira API token: [paste your token here — get one at https://id.atlassian.com/manage-profile/security/api-tokens]
 ```
 
 Once Claude completes the steps, fully quit and reopen Claude Desktop. Then ask it `Get PROJ-XXXX` to confirm it's working.
 
+### ChatGPT Desktop (non-technical)
+
+If you're using the ChatGPT desktop app, paste this prompt into ChatGPT Desktop instead:
+
+```
+I want to install the Jira MCP connector so I can look up and manage
+Jira tickets directly from ChatGPT.
+
+Please help me:
+1. Check if Node.js is installed — if not, install it from https://nodejs.org
+2. Check if nvm or mise is installed (run: command -v nvm; command -v mise). If mise is installed, make sure Node is enabled globally: run `mise use --global node@lts`
+3. Clone https://github.com/VenkatManchikalapudi/jira-mcp-connector.git and run: npm install -g ./jira-mcp-connector
+4. Run `which jira-mcp` to get the full path to the installed binary
+5. Find my ChatGPT Desktop config file (~/Library/Application Support/OpenAI/ChatGPT/mcp_config.json) and add the MCP server config block with my credentials — use the full path from step 4 as the "command" value
+6. Restart ChatGPT Desktop and confirm the Jira connector is working by fetching a ticket
+
+My details:
+- Jira email: [your-email@your-org.com]
+- Jira API token: [paste your token here — get one at https://id.atlassian.com/manage-profile/security/api-tokens]
+```
+
+Once ChatGPT completes the steps, fully quit and reopen ChatGPT Desktop. Then ask it `Get PROJ-XXXX` to confirm it's working.
+
+### GitHub Copilot in VS Code (non-technical)
+
+If you're using GitHub Copilot in VS Code, paste this prompt into Copilot Chat instead:
+
+```
+I want to install the Jira MCP connector so I can look up and manage
+Jira tickets directly from GitHub Copilot.
+
+Please help me:
+1. Check if Node.js is installed — if not, install it from https://nodejs.org
+2. Check if nvm or mise is installed (run: command -v nvm; command -v mise). If mise is installed, make sure Node is enabled globally: run `mise use --global node@lts`
+3. Clone https://github.com/VenkatManchikalapudi/jira-mcp-connector.git and run: npm install -g ./jira-mcp-connector
+4. Run `which jira-mcp` to get the full path to the installed binary
+5. Create or open .vscode/mcp.json in my workspace and add the MCP server config block with my credentials — use the full path from step 4 as the "command" value
+6. Reload VS Code and confirm the Jira connector is working by fetching a ticket
+
+My details:
+- Jira email: [your-email@your-org.com]
+- Jira API token: [paste your token here — get one at https://id.atlassian.com/manage-profile/security/api-tokens]
+```
+
+Once Copilot completes the steps, reload VS Code (Cmd+Shift+P → "Developer: Reload Window"). Then ask Copilot `Get PROJ-XXXX` to confirm it's working.
+
 ---
 
 ## Installation
-
-### Prerequisites
 
 - **Node.js 18+** — check with `node --version`, install from https://nodejs.org if needed
 
@@ -52,16 +97,16 @@ Once Claude completes the steps, fully quit and reopen Claude Desktop. Then ask 
 # SSH (recommended — no password prompt)
 git clone git@github.com:VenkatManchikalapudi/jira-mcp-connector.git
 
-# HTTPS
+# HTTPS (if you don't have SSH keys set up for Bitbucket)
 git clone https://github.com/VenkatManchikalapudi/jira-mcp-connector.git
 ```
 ```bash
 npm install -g ./jira-mcp-connector
 ```
 
-### Step 3 — Configure Claude
+### Step 3 — Configure your AI assistant
 
-The config block to add is the same for all setups — the only difference is which file you edit:
+The config block is the same for all setups — the only difference is which file you edit:
 
 ```json
 {
@@ -78,7 +123,7 @@ The config block to add is the same for all setups — the only difference is wh
 }
 ```
 
-Replace the values with your Jira host, email, and API token.
+Replace `your-email@your-org.com` and `your_api_token` with your values.
 
 **Claude Desktop (macOS)**
 Open this file (create it if it doesn't exist):
@@ -89,37 +134,63 @@ Open this file (create it if it doesn't exist):
 **Claude Code**
 Try `~/.claude/settings.json` first; if Claude doesn't pick it up, use `~/.claude.json` instead.
 
-> **Note:** If you use mise or nvm, `jira-mcp` may not be on Claude's PATH. Run `which jira-mcp` after install and use the full path as the `command` value.
+**ChatGPT Desktop (macOS)**
+Open this file (create it if it doesn't exist):
+```
+~/Library/Application Support/OpenAI/ChatGPT/mcp_config.json
+```
 
-### Step 4 — Restart Claude
+**GitHub Copilot (VS Code)**
+Copilot uses a slightly different config format — `"servers"` instead of `"mcpServers"`. Create or open `.vscode/mcp.json` in your workspace:
 
-Fully quit and reopen Claude, then try `Get PROJ-XXXX` to confirm it's working.
+```json
+{
+  "servers": {
+    "jira": {
+      "command": "jira-mcp",
+      "env": {
+        "JIRA_HOST": "your-org.atlassian.net",
+        "JIRA_EMAIL": "your-email@your-org.com",
+        "JIRA_API_TOKEN": "your_api_token"
+      }
+    }
+  }
+}
+```
+
+Alternatively, add the same block under `github.copilot.mcp.servers` in your VS Code user settings (`settings.json`) to apply it globally across all workspaces.
+
+> **Note:** If you use mise or nvm, `jira-mcp` may not be on your PATH. Run `which jira-mcp` after install and use the full path as the `command` value.
+
+### Step 4 — Restart your AI assistant
+
+Fully quit and reopen the app, then try `Get PROJ-XXXX` to confirm it's working.
 
 ## Usage Examples
 
 **Get an issue:**
 ```
-Read PROJ-1234 to understand the current status
+Read PROJ-2275 to understand the current status
 ```
 
 **Search for open bugs:**
 ```
-Find all open bugs assigned to me
+Find all open bugs in the SPR project assigned to me
 ```
 
 **Create a ticket:**
 ```
-Create a task "Update API documentation" in the PROJ project
+Create a task "Update documentation for Jira integration" in the SPR project
 ```
 
 **Add a comment:**
 ```
-Comment on PROJ-1234: "This has been resolved in PR #42"
+Comment on PROJ-2275: "This has been resolved in PR #42"
 ```
 
 **Move issue to Done:**
 ```
-Transition PROJ-1234 to Done with a comment "Merged and deployed"
+Transition PROJ-2275 to Done with a comment "Merged and deployed"
 ```
 
 ## JQL Query Examples
@@ -128,7 +199,7 @@ Transition PROJ-1234 to Done with a comment "Merged and deployed"
 # Issues assigned to you
 assignee = currentUser()
 
-# Open bugs in a project
+# Open bugs in SPR project
 project = PROJ AND type = Bug AND status IN (Open, "In Progress")
 
 # Issues updated in the last 7 days
@@ -141,7 +212,7 @@ labels in (urgent, security)
 priority >= High
 
 # Sprint board issues
-sprint in openSprints() AND status != Done
+sprint = "Sprint 45" AND status != Done
 ```
 
 See Jira's [Advanced Searching documentation](https://www.atlassian.com/software/jira/guides/expand-jira/jira-query-language) for more.
@@ -274,10 +345,6 @@ npm run build     # compile and bundle with esbuild
 npm run dev       # run in dev mode (ts-node)
 npm test          # run tests
 ```
-
-## Author
-
-Built by [Venkat Manchikalapudi](https://github.com/VenkatManchikalapudi)
 
 ## License
 
