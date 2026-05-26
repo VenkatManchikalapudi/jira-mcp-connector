@@ -288,13 +288,14 @@ const tools = [
   },
   {
     name: "delete_issue",
-    description: "Delete a Jira issue permanently.",
+    description: "Permanently delete a Jira issue. This action is irreversible. You must pass confirm: true to proceed.",
     inputSchema: {
       type: "object" as const,
       properties: {
         issue_key: { type: "string", description: "The issue key to delete (e.g., PROJ-1234)" },
+        confirm: { type: "boolean", description: "Must be true to confirm permanent deletion" },
       },
-      required: ["issue_key"],
+      required: ["issue_key", "confirm"],
     },
   },
   {
@@ -506,8 +507,12 @@ async function main() {
           break;
         }
         case "delete_issue":
+          if (!input.confirm) {
+            result = { error: "Deletion requires confirm: true. This action is permanent and cannot be undone." };
+            break;
+          }
           await jiraClient.deleteIssue(input.issue_key as string);
-          result = { success: true, message: `Issue ${input.issue_key} deleted` };
+          result = { success: true, message: `Issue ${input.issue_key} permanently deleted` };
           break;
         case "add_comment":
           result = await jiraClient.addComment(input.issue_key as string, input.comment as string);
