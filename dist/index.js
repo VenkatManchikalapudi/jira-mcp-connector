@@ -15825,7 +15825,7 @@ async function main() {
   const jiraToken = process.env.JIRA_API_TOKEN;
   if (!jiraHost || !jiraUsername || !jiraToken) {
     console.error("Error: Missing required environment variables:");
-    console.error("  - JIRA_HOST (e.g., net32inc.atlassian.net)");
+    console.error("  - JIRA_HOST (e.g., your-org.atlassian.net)");
     console.error("  - JIRA_EMAIL (e.g., your@email.com)");
     console.error("  - JIRA_API_TOKEN (from https://id.atlassian.com/manage-profile/security/api-tokens)");
     process.exit(1);
